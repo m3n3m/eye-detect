@@ -97,23 +97,23 @@ const draw = myImg => {
     imageData.data = data;
     ctx.putImageData(imageData, 0, 0);
   };
-  // outline();
+  outline();
 
   // 輪郭追跡を行い，輪郭部のみに色を出力する
   const contourDetection = (contextOut, width, height) => {
     // 読み取り用ピクセルデータ（書き換えない）
-    var pixelData = new Array(width);
-    for (var i = 0; i < width; ++i) {
+    const pixelData = new Array(width);
+    for (let i = 0; i < width; ++i) {
       pixelData[i] = new Array(height);
-      for (var j = 0; j < height; ++j) {
+      for (let j = 0; j < height; ++j) {
         pixelData[i][j] = data[4 * (width * j + i)];
       }
     }
     // 更新用ピクセルデータ
-    var buf = new Array(width);
-    for (var i = 0; i < width; ++i) {
+    const buf = new Array(width);
+    for (let i = 0; i < width; ++i) {
       buf[i] = new Array(height);
-      for (var j = 0; j < height; ++j) {
+      for (let j = 0; j < height; ++j) {
         buf[i][j] = 255;
       }
     }
@@ -123,9 +123,9 @@ const draw = myImg => {
     // 3 2 1
     // 4 * 0
     // 5 6 7
-    var nextCode = [7, 7, 1, 1, 3, 3, 5, 5];
+    let nextCode = [7, 7, 1, 1, 3, 3, 5, 5];
     // Freeman's chain code
-    var chainCode = [
+    let chainCode = [
       [1, 0],
       [1, -1],
       [0, -1],
@@ -136,17 +136,17 @@ const draw = myImg => {
       [1, 1]
     ];
 
-    var rel; // relativee pisition
-    var relBuf; // previous rel
-    var dPx = []; // detected pixel 輪郭として検出されたピクセルのテンポラリー変数
-    var startPx = []; // 輪郭追跡の開始ピクセル
-    var sPx = []; // searching pixel
-    var isClosed = false; // 輪郭が閉じていれば true
-    var isStandAlone; // 孤立点ならば true
-    var pxs = []; // 輪郭のピクセル座標の配列を格納するテンポラリー配列
-    var boundaryPxs = []; // 複数の輪郭を格納する配列
-    var pxVal; // 着目するピクセルの色
-    var duplicatedPx = []; // 複数回、輪郭として検出されたピクセル座標を格納（将来的にこのような重複を許さないアルゴリズムにしたい）
+    let rel; // relativee pisition
+    let relBuf; // previous rel
+    let dPx = []; // detected pixel 輪郭として検出されたピクセルのテンポラリー変数
+    let startPx = []; // 輪郭追跡の開始ピクセル
+    let sPx = []; // searching pixel
+    let isClosed = false; // 輪郭が閉じていれば true
+    let isStandAlone; // 孤立点ならば true
+    let pxs = []; // 輪郭のピクセル座標の配列を格納するテンポラリー配列
+    let boundaryPxs = []; // 複数の輪郭を格納する配列
+    let pxVal; // 着目するピクセルの色
+    let duplicatedPx = []; // 複数回、輪郭として検出されたピクセル座標を格納（将来的にこのような重複を許さないアルゴリズムにしたい）
     while (1) {
       // 輪郭追跡開始ピクセルを探す
       dPx = searchStartPixel();
@@ -162,7 +162,7 @@ const draw = myImg => {
       relBuf = 5; // 最初に調べるのは5番
       // 輪郭が閉じるまで次々に周囲のピクセルを調べる
       while (!isClosed) {
-        for (var i = 0; i < 8; ++i) {
+        for (let i = 0; i < 8; ++i) {
           rel = (relBuf + i) % 8; // relBufから順に調べる
           sPx[0] = dPx[0] + chainCode[rel][0];
           sPx[1] = dPx[1] + chainCode[rel][1];
@@ -205,9 +205,8 @@ const draw = myImg => {
 
     // 左上から操作し開始点（白から黒に代わるピクセル）を見つける
     function searchStartPixel() {
-      var idx;
-      var x, y;
-      var leftPx;
+      let x, y;
+      let leftPx;
       for (y = 0; y < height; ++y) {
         for (x = 0; x < width; ++x) {
           if (x == 0) {
@@ -227,11 +226,11 @@ const draw = myImg => {
     // 輪郭ごとに色を変えて描画する
     contextOut.clearRect(0, 0, width, height);
     colors = ['red', 'green', 'blue', 'orange', 'purple', 'cyan'];
-    for (var i = 0; i < boundaryPxs.length; ++i) {
+    for (let i = 0; i < boundaryPxs.length; ++i) {
       contextOut.strokeStyle = colors[i % colors.length];
       contextOut.beginPath();
       contextOut.moveTo(boundaryPxs[i][0][0], boundaryPxs[i][0][1]);
-      for (var j = 1; j < boundaryPxs[i].length; ++j) {
+      for (let j = 1; j < boundaryPxs[i].length; ++j) {
         contextOut.lineTo(boundaryPxs[i][j][0], boundaryPxs[i][j][1]);
       }
       contextOut.lineTo(boundaryPxs[i][0][0], boundaryPxs[i][0][1]);
