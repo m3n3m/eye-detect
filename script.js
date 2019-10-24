@@ -12,17 +12,7 @@ const draw = myImg => {
   canvas.width = 480;
   canvas.height = 240;
 
-  ctx.drawImage(
-    myImg,
-    1500,
-    1200,
-    1920,
-    960,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
+  ctx.drawImage(myImg, 0, 0, 960, 480, 0, 0, canvas.width, canvas.height);
   myImg.style.display = 'none';
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -75,6 +65,7 @@ const draw = myImg => {
           b: data[underIndex + 2]
         };
 
+      //2つの色の差
       const getColorDistance = (rgb1, rgb2) => {
         return Math.sqrt(
           Math.pow(rgb1.r - rgb2.r, 2) +
@@ -238,5 +229,5 @@ const draw = myImg => {
     }
     contextOut.strokeStyle = 'black';
   };
-  contourDetection(ctx, canvas.width, canvas.height);
+  // contourDetection(ctx, canvas.width, canvas.height);
 };
