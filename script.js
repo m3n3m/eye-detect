@@ -6,16 +6,29 @@ myImg.onload = function() {
 };
 
 const draw = myImg => {
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+  //背景に元画像を薄く重ねる
+  const bg = document.getElementById('bg');
+  const ctxBg = bg.getContext('2d');
 
-  canvas.width = 480;
-  canvas.height = 240;
+  const w = 480;
+  const h = 240;
 
-  ctx.drawImage(myImg, 0, 0, 960, 480, 0, 0, canvas.width, canvas.height);
+  bg.width = w;
+  bg.height = h;
+
+  ctxBg.drawImage(myImg, 0, 0, 960, 480, 0, 0, w, h);
+
+  //輪郭検出用の描画を上に重ねる
+  const overlay = document.getElementById('overlay');
+  const ctx = overlay.getContext('2d');
+
+  overlay.width = w;
+  overlay.height = h;
+
+  ctx.drawImage(myImg, 0, 0, 960, 480, 0, 0, w, h);
   myImg.style.display = 'none';
 
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, w, h);
   const data = imageData.data;
 
   //目の画像の2値化
@@ -38,14 +51,14 @@ const draw = myImg => {
       colorDistance = 10;
 
     for (let i = 0; i < data.length; i += 4) {
-      if ((i / 4 + 1) % canvas.width === 0) {
+      if ((i / 4 + 1) % w === 0) {
         data[i + 3] = 0;
         continue;
       }
 
       let currentIndex = i,
         nextIndex = currentIndex + 4,
-        underIndex = currentIndex + canvas.width * 4,
+        underIndex = currentIndex + w * 4,
         //チェックするピクセルの色
         current = {
           r: data[currentIndex],
@@ -90,144 +103,69 @@ const draw = myImg => {
   };
   outline();
 
-  // 輪郭追跡を行い，輪郭部のみに色を出力する
-  const contourDetection = (contextOut, width, height) => {
-    // 読み取り用ピクセルデータ（書き換えない）
-    const pixelData = new Array(width);
-    for (let i = 0; i < width; ++i) {
-      pixelData[i] = new Array(height);
-      for (let j = 0; j < height; ++j) {
-        pixelData[i][j] = data[4 * (width * j + i)];
-      }
-    }
-    // 更新用ピクセルデータ
-    const buf = new Array(width);
-    for (let i = 0; i < width; ++i) {
-      buf[i] = new Array(height);
-      for (let j = 0; j < height; ++j) {
-        buf[i][j] = 255;
-      }
-    }
+  const findCircles = () => {
+    let acc_all = []; //各点(x,y)ごとのaccを格納しておく配列。チェックする点の数の分配列が入る。
+    //頻度を蓄積するカウンタ
+    let acc = [...Array(h)].map(k =>
+      [...Array(w)].map(k => [...Array(h)].map(k => 0))
+    );
 
-    // あるピクセルを * で表し、
-    // 周囲のピクセルを下のように番号を付けて表す
-    // 3 2 1
-    // 4 * 0
-    // 5 6 7
-    let nextCode = [7, 7, 1, 1, 3, 3, 5, 5];
-    // Freeman's chain code
-    let chainCode = [
-      [1, 0],
-      [1, -1],
-      [0, -1],
-      [-1, -1],
-      [-1, 0],
-      [-1, 1],
-      [0, 1],
-      [1, 1]
-    ];
+    //TODO:推定する円の最小半径と最大半径を決めて範囲を狭める
+    //目の部分を検出してcanvasにしているなら、瞳の半径はcanvasの高さの半分よりは確実に大きい。また、canvasの高さより大きくなることはないはず。と仮定する。
 
-    let rel; // relativee pisition
-    let relBuf; // previous rel
-    let dPx = []; // detected pixel 輪郭として検出されたピクセルのテンポラリー変数
-    let startPx = []; // 輪郭追跡の開始ピクセル
-    let sPx = []; // searching pixel
-    let isClosed = false; // 輪郭が閉じていれば true
-    let isStandAlone; // 孤立点ならば true
-    let pxs = []; // 輪郭のピクセル座標の配列を格納するテンポラリー配列
-    let boundaryPxs = []; // 複数の輪郭を格納する配列
-    let pxVal; // 着目するピクセルの色
-    let duplicatedPx = []; // 複数回、輪郭として検出されたピクセル座標を格納（将来的にこのような重複を許さないアルゴリズムにしたい）
-    while (1) {
-      // 輪郭追跡開始ピクセルを探す
-      dPx = searchStartPixel();
-      // 画像全体が検索された場合はループを終了
-      if (dPx[0] == width && dPx[1] == height) {
-        break;
-      }
-      pxs = [];
-      pxs.push([dPx[0], dPx[1]]);
-      startPx = [dPx[0], dPx[1]];
-      isStandAlone = false;
-      isClosed = false;
-      relBuf = 5; // 最初に調べるのは5番
-      // 輪郭が閉じるまで次々に周囲のピクセルを調べる
-      while (!isClosed) {
-        for (let i = 0; i < 8; ++i) {
-          rel = (relBuf + i) % 8; // relBufから順に調べる
-          sPx[0] = dPx[0] + chainCode[rel][0];
-          sPx[1] = dPx[1] + chainCode[rel][1];
-          // sPx が画像上の座標外ならば白として評価する
-          if (sPx[0] < 0 || sPx[0] >= width || sPx[1] < 0 || sPx[1] >= height) {
-            pxVal = 255;
-          } else {
-            pxVal = pixelData[sPx[0]][sPx[1]];
-          }
-          // もし調べるピクセルの色が黒ならば新しい輪郭とみなす
-          // 最初のピクセルに戻れば次の輪郭を探す
-          // 周囲の8ピクセルがすべて白ならば孤立点なので次の輪郭を探す
-          if (pxVal == 0) {
-            if (buf[sPx[0]][sPx[1]] == 0) {
-              duplicatedPx.push([sPx[0], sPx[1]]);
-            }
-            // 検出されたピクセルが輪郭追跡開始ピクセルならば
-            // 追跡を終了して次の輪郭に移る
-            if (sPx[0] == startPx[0] && sPx[1] == startPx[1]) {
-              isClosed = true;
-              break;
-            }
-            buf[sPx[0]][sPx[1]] = 0; // 検出された点を黒にする
-            dPx[0] = sPx[0];
-            dPx[1] = sPx[1];
-            pxs.push([dPx[0], dPx[1]]);
-            relBuf = nextCode[rel];
-            break;
-          }
-          if (i == 7) {
-            isStandAlone = true;
-          }
-        }
-        if (isStandAlone) {
-          break;
+    //2値化した画像から抽出した境界線上の点を格納しておく配列
+    let circle_point_candidates = [];
+
+    for (let y = 0; y < h; y += 8) {
+      for (let x = 0; x < w; x += 8) {
+        let pixelData = ctx.getImageData(x, y, 1, 1);
+        if (
+          pixelData.data[0] === 255 ||
+          pixelData.data[1] === 255 ||
+          pixelData.data[2] === 255
+        ) {
+          circle_point_candidates.push([x, y]);
+          ctx.fillStyle = '#0000ff';
+          ctx.fillRect(x, y, 4, 4);
         }
       }
-      boundaryPxs.push(pxs);
     }
 
-    // 左上から操作し開始点（白から黒に代わるピクセル）を見つける
-    function searchStartPixel() {
-      let x, y;
-      let leftPx;
-      for (y = 0; y < height; ++y) {
-        for (x = 0; x < width; ++x) {
-          if (x == 0) {
-            leftPx = 255;
-          } else {
-            leftPx = pixelData[x - 1][y];
-          }
-          if (leftPx == 255 && pixelData[x][y] == 0 && buf[x][y] == 255) {
-            buf[x][y] = 0;
-            return [x, y];
+    for (let i = 0; i < circle_point_candidates.length; i++) {
+      //候補点を順番に取り出して確認する
+      let circle_y = circle_point_candidates[i][1];
+      let circle_x = circle_point_candidates[i][0];
+
+      //円の中心点(p,q)
+      const radius = (x, y, p, q) => {
+        return ~~Math.sqrt(((x - p) ^ 2) + ((y - q) ^ 2));
+      };
+      //点(circle_x,circle_y)において円の中心点(center_x,center_y)を変化させるとき
+      //radiusがh/2からhの範囲内であれば1を返す
+      //もしradiusがh/2より小さければ0を返す
+      //radiusがhより大きい場合も0を返す
+      //各(circle_x,circle_y)のp,q,rの組み合わせを記した配列を比較して、重複するp,q,rの組みわせを探し出す
+
+      for (let q = 0; q < h; q++) {
+        for (let p = 0; p < w; p++) {
+          let r = radius(circle_x, circle_y, p, q);
+          if (r >= h / 2 && r <= h) {
+            acc[q][p][r] = 1;
           }
         }
       }
-      return [width, height];
+      acc_all[i] = acc;
+      //acc_all[0]とacc_all[1]を比較してみる
+      //重なるところがあるかどうか
     }
-
-    // 輪郭ごとに色を変えて描画する
-    contextOut.clearRect(0, 0, width, height);
-    colors = ['red', 'green', 'blue', 'orange', 'purple', 'cyan'];
-    for (let i = 0; i < boundaryPxs.length; ++i) {
-      contextOut.strokeStyle = colors[i % colors.length];
-      contextOut.beginPath();
-      contextOut.moveTo(boundaryPxs[i][0][0], boundaryPxs[i][0][1]);
-      for (let j = 1; j < boundaryPxs[i].length; ++j) {
-        contextOut.lineTo(boundaryPxs[i][j][0], boundaryPxs[i][j][1]);
-      }
-      contextOut.lineTo(boundaryPxs[i][0][0], boundaryPxs[i][0][1]);
-      contextOut.stroke();
-    }
-    contextOut.strokeStyle = 'black';
+    testMat = math.add(acc_all[0], acc_all[1]);
+    return acc_all;
   };
-  // contourDetection(ctx, canvas.width, canvas.height);
+  // const acc_all = findCircles();
+  console.log(acc_all);
+
+  const arr1 = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  const arr2 = [[0, 0, 0], [0, 1, 0], [0, 0, 0]];
+  const testMat2 = math.add(arr1, arr2);
+  console.log('test:' + testMat2);
 };

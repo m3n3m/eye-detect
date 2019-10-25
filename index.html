@@ -5,12 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>outline</title>
+    <style>
+      .wrapper {
+        position: relative;
+      }
+      #bg {
+        opacity: 0.5;
+      }
+      #overlay {
+        position: absolute;
+        z-index: 5;
+        top: 0;
+        left: 0;
+      }
+    </style>
   </head>
 
   <body>
-    <div>
-      <canvas id="canvas"></canvas>
+    <div class="wrapper">
+      <canvas id="bg"></canvas>
+      <canvas id="overlay"></canvas>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/6.2.2/math.min.js"></script>
     <script type="text/javascript" src="./script.js"></script>
   </body>
 </html>
