@@ -132,7 +132,7 @@ const draw = myImg => {
     }
 
     for (let i = 0; i < circle_point_candidates.length; i++) {
-      //候補点を順番に取り出して確認する
+      //候補点(x,y)を順番に取り出して確認する
       let circle_y = circle_point_candidates[i][1];
       let circle_x = circle_point_candidates[i][0];
 
@@ -145,27 +145,31 @@ const draw = myImg => {
       //もしradiusがh/2より小さければ0を返す
       //radiusがhより大きい場合も0を返す
       //各(circle_x,circle_y)のp,q,rの組み合わせを記した配列を比較して、重複するp,q,rの組みわせを探し出す
-
       for (let q = 0; q < h; q++) {
         for (let p = 0; p < w; p++) {
           let r = radius(circle_x, circle_y, p, q);
-          if (r >= h / 2 && r <= h) {
+          if (r > h / 4 && r < h / 2) {
             acc[q][p][r] = 1;
+            // console.log('r: ' + r);
+            // ctx.strokeStyle = '#0000ff';
+            // ctx.arc(p, q, r, 0, 2 * Math.PI);
           }
         }
       }
       acc_all[i] = acc;
-      //acc_all[0]とacc_all[1]を比較してみる
-      //重なるところがあるかどうか
+      if (i == 0) {
+        sumMat = acc_all[0];
+      } else {
+        sumMat = math.add(sumMat, acc_all[i]);
+      }
     }
-    testMat = math.add(acc_all[0], acc_all[1]);
-    return acc_all;
+    return sumMat;
   };
-  // const acc_all = findCircles();
-  console.log(acc_all);
+  const sum = findCircles();
+  // console.log(sum);
 
-  const arr1 = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
-  const arr2 = [[0, 0, 0], [0, 1, 0], [0, 0, 0]];
-  const testMat2 = math.add(arr1, arr2);
-  console.log('test:' + testMat2);
+  // const arr1 = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  // const arr2 = [[0, 0, 0], [0, 1, 0], [0, 0, 0]];
+  // const testMat2 = math.add(arr1, arr2);
+  // console.log('test:' + testMat2);
 };
