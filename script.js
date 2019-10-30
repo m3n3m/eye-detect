@@ -110,6 +110,7 @@ const draw = myImg => {
       [...Array(w)].map(k => [...Array(h)].map(k => 0))
     );
 
+    let circle_center_candidates = [];
     //TODO:推定する円の最小半径と最大半径を決めて範囲を狭める
     //目の部分を検出してcanvasにしているなら、瞳の半径はcanvasの高さの半分よりは確実に大きい。また、canvasの高さより大きくなることはないはず。と仮定する。
 
@@ -130,7 +131,22 @@ const draw = myImg => {
         }
       }
     }
+    // console.log(circle_point_candidates);
 
+    const max_x = _.maxBy(circle_point_candidates, function(point) {
+      return point[0];
+    })[0];
+    const min_x = _.minBy(circle_point_candidates, function(point) {
+      return point[0];
+    })[0];
+    const max_y = _.maxBy(circle_point_candidates, function(point) {
+      return point[1];
+    })[1];
+    const min_y = _.minBy(circle_point_candidates, function(point) {
+      return point[1];
+    })[1];
+
+    //青い点を通る円の中心点
     for (let i = 0; i < circle_point_candidates.length; i++) {
       //候補点(x,y)を順番に取り出して確認する
       let circle_y = circle_point_candidates[i][1];
@@ -138,38 +154,37 @@ const draw = myImg => {
 
       //円の中心点(p,q)
       const radius = (x, y, p, q) => {
-        return ~~Math.sqrt(((x - p) ^ 2) + ((y - q) ^ 2));
+        return ~~Math.sqrt((x - p) * (x - p) + (y - q) * (y - q));
       };
-      //点(circle_x,circle_y)において円の中心点(center_x,center_y)を変化させるとき
-      //radiusがh/2からhの範囲内であれば1を返す
-      //もしradiusがh/2より小さければ0を返す
-      //radiusがhより大きい場合も0を返す
-      //各(circle_x,circle_y)のp,q,rの組み合わせを記した配列を比較して、重複するp,q,rの組みわせを探し出す
-      for (let q = 0; q < h; q++) {
-        for (let p = 0; p < w; p++) {
+
+      // let testR = radius(208, 40, 240, 120);
+      // console.log('testR:' + testR);
+      // ctx.strokeStyle = 'yellow';
+      // ctx.beginPath();
+      // ctx.arc(240, 120, testR, 0, 2 * Math.PI);
+      // ctx.stroke();
+
+      // ctx.fillStyle = 'yellow';
+      // ctx.fillRect(208, 40, 4, 4);
+
+      for (let q = min_y; q < max_y; q++) {
+        for (let p = min_x; p < max_x; p++) {
           let r = radius(circle_x, circle_y, p, q);
-          if (r > h / 4 && r < h / 2) {
+          const max_r = (max_x - min_x) / 2;
+          if (r >= max_r * 0.7 && r < max_r) {
             acc[q][p][r] = 1;
-            // console.log('r: ' + r);
-            // ctx.strokeStyle = '#0000ff';
+            circle_center_candidates.push({ p: p, q: q, r: r });
+            // ctx.strokeStyle = 'yellow';
+            // ctx.beginPath();
             // ctx.arc(p, q, r, 0, 2 * Math.PI);
+            // ctx.stroke();
           }
         }
       }
       acc_all[i] = acc;
-      if (i == 0) {
-        sumMat = acc_all[0];
-      } else {
-        sumMat = math.add(sumMat, acc_all[i]);
-      }
     }
-    return sumMat;
+    // console.log(circle_center_candidates);
+    return acc_all;
   };
-  const sum = findCircles();
-  // console.log(sum);
-
-  // const arr1 = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
-  // const arr2 = [[0, 0, 0], [0, 1, 0], [0, 0, 0]];
-  // const testMat2 = math.add(arr1, arr2);
-  // console.log('test:' + testMat2);
+  findCircles();
 };
