@@ -166,6 +166,7 @@ const draw = myImg => {
 
       // ctx.fillStyle = 'yellow';
       // ctx.fillRect(208, 40, 4, 4);
+      // ctx.fillRect(240, 120, 4, 4);
 
       for (let q = min_y; q < max_y; q++) {
         for (let p = min_x; p < max_x; p++) {
@@ -183,7 +184,7 @@ const draw = myImg => {
       }
       acc_all[i] = acc;
     }
-    // console.log(circle_center_candidates);
+
     return acc_all;
   };
   findCircles();
