@@ -104,15 +104,12 @@ const draw = myImg => {
   outline();
 
   const findCircles = () => {
-    let acc_all = []; //各点(x,y)ごとのaccを格納しておく配列。チェックする点の数の分配列が入る。
-    //頻度を蓄積するカウンタ
+    let acc_all = []; //各点(x,y)ごとのaccを格納しておく配列。
     let acc = [...Array(h)].map(k =>
       [...Array(w)].map(k => [...Array(h)].map(k => 0))
     );
 
     let circle_center_candidates = [];
-    //TODO:推定する円の最小半径と最大半径を決めて範囲を狭める
-    //目の部分を検出してcanvasにしているなら、瞳の半径はcanvasの高さの半分よりは確実に大きい。また、canvasの高さより大きくなることはないはず。と仮定する。
 
     //2値化した画像から抽出した境界線上の点を格納しておく配列
     let circle_point_candidates = [];
@@ -184,6 +181,37 @@ const draw = myImg => {
       }
       acc_all[i] = acc;
     }
+
+    const sortByP = _.sortBy(circle_center_candidates, [
+      function(obj) {
+        return obj.p;
+      }
+    ]);
+    const sortByQ = _.sortBy(sortByP, [
+      function(obj) {
+        return obj.q;
+      }
+    ]);
+    const sortByR = _.sortBy(sortByQ, [
+      function(obj) {
+        return obj.r;
+      }
+    ]);
+    // console.log(sortByR);
+    console.log(JSON.stringify(sortByR[0]));
+    // console.log(JSON.stringify(sortByR[0]) == JSON.stringify(sortByR[1]));
+    let counts = {};
+    for (let i = 0; i < sortByR.length; i++) {
+      let key = JSON.stringify(sortByR[i]);
+      counts[key] = counts[key] ? counts[key] + 1 : 1;
+
+      // if (JSON.stringify(sortByQ[i]) == JSON.stringify(sortByQ[i + 1])) {
+      //   console.log(sortByQ[i]);
+      // }
+    }
+    console.log(counts[JSON.stringify(sortByR[1000])]);
+    //sortByRのuniqとcounts
+    console.log(JSON.stringify(counts));
 
     return acc_all;
   };
