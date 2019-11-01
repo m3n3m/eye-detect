@@ -94,22 +94,18 @@ const draw = myImg => {
         data[i] = 0;
         data[i + 1] = 0;
         data[i + 2] = 0;
-      } else {
-        data[i + 3] = 0;
       }
       //垂直方向
       if (top.r === 0 && bottom.r === 0) {
         data[i] = 0;
         data[i + 1] = 0;
         data[i + 2] = 0;
-      } else {
-        data[i + 3] = 0;
       }
     }
     imageData.data = data;
     ctx.putImageData(imageData, 0, 0);
   };
-  // erosion();
+  erosion();
 
   //輪郭線
   //色の差の大きいところを輪郭線にする
@@ -193,7 +189,7 @@ const draw = myImg => {
   };
   markers();
 
-  //scan convex hull
+  //convex hull
   const convexHull = points => {
     const p = points;
     let temp = [];
@@ -207,10 +203,6 @@ const draw = myImg => {
     ]);
 
     let acc = [sortByY[0]];
-
-    // console.log(p);
-    // console.log(sortByY);
-    // console.log(acc);
 
     //角度順でソートする
     for (let j = 1; j < sortByY.length; j++) {
@@ -271,7 +263,7 @@ const draw = myImg => {
     point = _.chunk(sortByTheta[0], 2)[0];
     acc.push(point);
   };
-  convexHull(circle_point_candidates);
+  // convexHull(circle_point_candidates);
 
   //ハフ変換
   const findCircles = () => {
