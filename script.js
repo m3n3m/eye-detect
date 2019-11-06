@@ -266,14 +266,10 @@ const draw = myImg => {
   // convexHull(circle_point_candidates);
 
   //ハフ変換
-  const findCircles = () => {
-    let acc_all = []; //各点(x,y)ごとのaccを格納しておく配列。
-    let acc = [...Array(h)].map(k =>
-      [...Array(w)].map(k => [...Array(h)].map(k => 0))
-    );
-
+  const houghTransform = () => {
     let circle_center_candidates = [];
 
+    //黒目の上端、下端、左端、右端
     const max_x = _.maxBy(circle_point_candidates, function(point) {
       return point[0];
     })[0];
@@ -287,7 +283,7 @@ const draw = myImg => {
       return point[1];
     })[1];
 
-    //青い点を通る円の中心点
+    //黒目の輪郭線上の点を通る円の中心点
     for (let i = 0; i < circle_point_candidates.length; i++) {
       //候補点(x,y)を順番に取り出して確認する
       let circle_y = circle_point_candidates[i][1];
@@ -303,64 +299,31 @@ const draw = myImg => {
           let r = radius(circle_x, circle_y, p, q);
           const max_r = (max_x - min_x) / 2;
           if (r >= max_r * 0.7 && r < max_r) {
-            acc[q][p][r] = 1;
             circle_center_candidates.push({ p: p, q: q, r: r });
           }
         }
       }
-      acc_all[i] = acc;
     }
 
-    const sortByP = _.sortBy(circle_center_candidates, [
-      function(obj) {
-        return obj.p;
-      }
-    ]);
-    const sortByQ = _.sortBy(sortByP, [
-      function(obj) {
-        return obj.q;
-      }
-    ]);
-    const sortByR = _.sortBy(sortByQ, [
-      function(obj) {
-        return obj.r;
-      }
-    ]);
-
-    // console.log(JSON.stringify(sortByR[0]) == JSON.stringify(sortByR[1]));
     let counts = {};
-    for (let i = 0; i < sortByR.length; i++) {
-      let key = JSON.stringify(sortByR[i]);
+    for (let i = 0; i < circle_center_candidates.length; i++) {
+      let key = JSON.stringify(circle_center_candidates[i]);
       counts[key] = counts[key] ? counts[key] + 1 : 1;
     }
-    // console.log(JSON.stringify(sortByR[1000]));
-    // console.log(counts[JSON.stringify(sortByR[1000])]);
-    // console.log(Object.keys(counts)[0]);
-
-    // let acc_counts = [];
-    // for (let i = 0; i < sortByR.length; i++) {
-    //   acc_counts.push(counts[JSON.stringify(sortByR[i])]);
-    // }
-    // console.log('counts_max: ' + _.max(acc_counts));
 
     let invArr = _.invert(counts);
-    // console.log(invArr);
-    // console.log(Object.keys(invArr)[0]);
-    // console.log(Object.keys(invArr).length);
-    // console.log(invert['8']);
 
     for (let i = 5; i <= Object.keys(invArr).length; i++) {
       const circle = JSON.parse(invArr[i]);
+      //円を描画
       ctx.strokeStyle = 'green';
       ctx.beginPath();
       ctx.arc(circle.p, circle.q, circle.r, 0, 2 * Math.PI);
       ctx.stroke();
-
+      //中心点を描画
       ctx.fillStyle = 'green';
       ctx.fillRect(circle.p, circle.q, 4, 4);
     }
-
-    return acc_all;
   };
-  findCircles();
+  houghTransform();
 };
