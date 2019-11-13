@@ -1,14 +1,14 @@
 //画像を描画する
 const myImg = new Image();
-myImg.src = './image/eye-closeup02.jpg';
+myImg.src = "./image/eye-closeup01.jpg";
 myImg.onload = function() {
   draw(this);
 };
 
 const draw = myImg => {
   //背景に元画像を薄く重ねる
-  const bg = document.getElementById('bg');
-  const ctxBg = bg.getContext('2d');
+  const bg = document.getElementById("bg");
+  const ctxBg = bg.getContext("2d");
 
   const w = 480;
   const h = 240;
@@ -19,21 +19,21 @@ const draw = myImg => {
   ctxBg.drawImage(myImg, 0, 0, 960, 480, 0, 0, w, h);
 
   //輪郭検出用の描画を上に重ねる
-  const overlay = document.getElementById('overlay');
-  const ctx = overlay.getContext('2d');
+  const overlay = document.getElementById("overlay");
+  const ctx = overlay.getContext("2d");
 
   overlay.width = w;
   overlay.height = h;
 
   ctx.drawImage(myImg, 0, 0, 960, 480, 0, 0, w, h);
-  myImg.style.display = 'none';
+  myImg.style.display = "none";
 
   const imageData = ctx.getImageData(0, 0, w, h);
   const data = imageData.data;
 
   //画像の2値化
   const thresholding = () => {
-    const threshold = 160;
+    const threshold = 90;
     for (let i = 0; i < data.length; i += 4) {
       let avg = ~~(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
       let color = avg > threshold ? 255 : 0;
@@ -105,7 +105,7 @@ const draw = myImg => {
     imageData.data = data;
     ctx.putImageData(imageData, 0, 0);
   };
-  erosion();
+  // erosion();
 
   //輪郭線
   //色の差の大きいところを輪郭線にする
@@ -179,7 +179,7 @@ const draw = myImg => {
           pixelData.data[2] === 255
         ) {
           circle_point_candidates.push([x, y]);
-          ctx.fillStyle = '#0000ff';
+          ctx.fillStyle = "#0000ff";
           ctx.fillRect(x, y, 4, 4);
         }
       }
@@ -187,7 +187,7 @@ const draw = myImg => {
     // console.log(circle_point_candidates);
     return circle_point_candidates;
   };
-  markers();
+  // markers();
 
   //convex hull
   const convexHull = points => {
@@ -316,14 +316,14 @@ const draw = myImg => {
     for (let i = 5; i <= Object.keys(invArr).length; i++) {
       const circle = JSON.parse(invArr[i]);
       //円を描画
-      ctx.strokeStyle = 'green';
+      ctx.strokeStyle = "green";
       ctx.beginPath();
       ctx.arc(circle.p, circle.q, circle.r, 0, 2 * Math.PI);
       ctx.stroke();
       //中心点を描画
-      ctx.fillStyle = 'green';
+      ctx.fillStyle = "green";
       ctx.fillRect(circle.p, circle.q, 4, 4);
     }
   };
-  houghTransform();
+  // houghTransform();
 };
