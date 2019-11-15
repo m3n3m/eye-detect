@@ -33,7 +33,7 @@ const draw = myImg => {
 
   //画像の2値化
   const thresholding = () => {
-    const threshold = 90;
+    const threshold = 120;
     for (let i = 0; i < data.length; i += 4) {
       let avg = ~~(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
       let color = avg > threshold ? 255 : 0;
@@ -43,7 +43,39 @@ const draw = myImg => {
     }
     ctx.putImageData(imageData, 0, 0);
   };
-  thresholding();
+  // thresholding();
+
+  const harris = () => {
+    const params = { blockSize: 5, k: 0.04, qualityLevel: 0.01 };
+    // returns Array of detected corners
+    const corners = CornerDetector.detect(
+      imageData,
+      CornerDetector.HARRIS,
+      params
+    );
+    let arr = [];
+    // console.log(imageData);
+    // console.log(corners);
+    for (let i = 0; i < corners.length; i++) {
+      if (corners[i] !== 0) {
+        let y = Math.floor(i / w);
+        let x = i - w * y;
+        arr.push({ x: x, y: y });
+      }
+    }
+    console.log(arr);
+    console.log(arr[0]);
+
+    for (let j = 0; j < arr.length; j++) {
+      ctx.fillStyle = "red";
+      ctx.beginPath();
+      ctx.arc(arr[j].x, arr[j].y, 4, 0, 2 * Math.PI, false);
+      ctx.fill();
+    }
+
+    return arr;
+  };
+  harris();
 
   //2値化した画像の内側の白を黒に置き換えられるかどうか
   const erosion = () => {
@@ -164,7 +196,7 @@ const draw = myImg => {
     imageData.data = data;
     ctx.putImageData(imageData, 0, 0);
   };
-  outline();
+  // outline();
 
   //輪郭線上から候補点
   //2値化した画像から抽出した境界線上の点を格納しておく配列
